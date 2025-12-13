@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Unity Web Player | Examine</title>
+    <link rel="shortcut icon" href="TemplateData/favicon.ico">
+    <link rel="stylesheet" href="TemplateData/style.css">
+    <style>
+      /* Убираем все отступы и полосы прокрутки */
+      body, html {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: black;
+      }
+      
+      /* Контейнер на весь экран */
+      #unity-container {
+        width: 100vw !important;
+        height: 100vh !important;
+        position: fixed;
+        top: 0;
+        left: 0;
+        background: black;
+      }
+      
+      /* Канвас на весь экран */
+      #unity-canvas {
+        width: 100% !important;
+        height: 100% !important;
+        display: block;
+      }
+      
+      /* Скрываем footer и другие ненужные элементы */
+      #unity-footer,
+      #unity-logo-title-footer,
+      #unity-build-title {
+        display: none !important;
+      }
+      
+      /* Loading bar тоже на весь экран */
+      #unity-loading-bar {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        display: none;
+      }
+      
+      /* Полноэкранный режим для всех устройств */
+      .unity-desktop, .unity-mobile {
+        width: 100% !important;
+        height: 100% !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="unity-container" class="unity-desktop">
+      <canvas id="unity-canvas" tabindex="-1"></canvas>
+      <div id="unity-loading-bar">
+        <div id="unity-logo"></div>
+        <div id="unity-progress-bar-empty">
+          <div id="unity-progress-bar-full"></div>
+        </div>
+      </div>
+      <div id="unity-warning"></div>
+      <div id="unity-footer">
+        <div id="unity-fullscreen-button"></div>
+      </div>
+    </div>
+    <script>
+      var canvas = document.querySelector("#unity-canvas");
+
+      function unityShowBanner(msg, type) {
+        var warningBanner = document.querySelector("#unity-warning");
+        function updateBannerVisibility() {
+          warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
+        }
+        var div = document.createElement('div');
+        div.innerHTML = msg;
+        warningBanner.appendChild(div);
+        if (type == 'error') div.style = 'background: red; padding: 10px;';
+        else {
+          if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
+          setTimeout(function() {
+            warningBanner.removeChild(div);
+            updateBannerVisibility();
+          }, 5000);
+        }
+        updateBannerVisibility();
+      }
+
+      var buildUrl = "Build";
+      var loaderUrl = buildUrl + "/Anastasiya_Build.loader.js";
+      var config = {
+        arguments: [],
+        dataUrl: buildUrl + "/Anastasiya_Build.data",
+        frameworkUrl: buildUrl + "/Anastasiya_Build.framework.js",
+        codeUrl: buildUrl + "/Anastasiya_Build.wasm",
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "Company",
+        productName: "Examine",
+        productVersion: "1.0",
+        showBanner: unityShowBanner,
+      };
+
+      // Настройка для всех устройств - полноэкранный режим
+      var meta = document.createElement('meta');
+      meta.name = 'viewport';
+      meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
+      document.getElementsByTagName('head')[0].appendChild(meta);
+      
+      // Устанавливаем размеры канваса
+      function resizeCanvas() {
+        canvas.style.width = "100%";
+        canvas.style.height = "100%";
+        canvas.width = window.innerWidth * window.devicePixelRatio;
+        canvas.height = window.innerHeight * window.devicePixelRatio;
+      }
+      
+      // Инициализация размеров
+      resizeCanvas();
+      
+      // Обработка изменения размеров окна
+      window.addEventListener('resize', resizeCanvas);
+      
+      // Принудительно устанавливаем класс для мобильных устройств
+      document.querySelector("#unity-container").className = "unity-desktop";
+      canvas.className = "unity-desktop";
+
+      document.querySelector("#unity-loading-bar").style.display = "block";
+
+      var script = document.createElement("script");
+      script.src = loaderUrl;
+      script.onload = () => {
+        createUnityInstance(canvas, config, (progress) => {
+          document.querySelector("#unity-progress-bar-full").style.width = 100 * progress + "%";
+        }).then((unityInstance) => {
+          document.querySelector("#unity-loading-bar").style.display = "none";
+              
+
+        }).catch((message) => {
+          alert(message);
+        });
+      };
+
+      document.body.appendChild(script);
+    </script>
+  </body>
+</html>
